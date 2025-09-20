@@ -66,7 +66,7 @@ const Signup : React.FC  =  () => {
     const handleSubmitOtp = async (event:React.FormEvent<HTMLFormElement>) =>{
         event.preventDefault()
         try{
-        const res = await fetch(`${serverUrl}api/auth/verifyotp`,{
+        const res = await fetch(`${serverUrl}/api/auth/verifyotp`,{
             method:'POST',
             credentials:'include',
             headers:{'content-type':'application/json', 'x-CSRFToken': csrfToken || ''},

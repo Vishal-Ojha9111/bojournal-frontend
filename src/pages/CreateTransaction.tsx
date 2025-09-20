@@ -56,7 +56,7 @@ const CreateTransaction: React.FC = () => {
 
   const cleanupFailedUploads = async () => {
     try {
-      await fetch(`${serverUrl}api/transactions/cleanup/`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ keys: Array.from(uploadedKeys) }) })
+      await fetch(`${serverUrl}/api/transactions/cleanup/`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ keys: Array.from(uploadedKeys) }) })
       setUploadedKeys(new Set())
     } catch (error: unknown) {
       console.error('Failed to cleanup uploaded files:', error)
@@ -73,7 +73,7 @@ const CreateTransaction: React.FC = () => {
       return
     }
     try {
-      const res = await fetch(`${serverUrl}api/transactions/`, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken || '' }, body: JSON.stringify(transactionData) })
+      const res = await fetch(`${serverUrl}/api/transactions/`, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken || '' }, body: JSON.stringify(transactionData) })
       const data = await res.json()
       if (!res.ok) {
         if (data.errors) throw new Error(Object.values(data.errors).join(', '))
@@ -112,7 +112,7 @@ const CreateTransaction: React.FC = () => {
 
   const getPresignedUrl = useCallback(async (type: string, extension: string): Promise<PresignedUrl | undefined> => {
     try {
-      const res = await fetch(`${serverUrl}api/transactions/presign/`, { method: 'POST', credentials: 'include', headers: { 'content-type': 'application/json', 'x-CSRFToken': csrfToken || '' }, body: JSON.stringify({ content_type: type, extension }) })
+      const res = await fetch(`${serverUrl}/api/transactions/presign/`, { method: 'POST', credentials: 'include', headers: { 'content-type': 'application/json', 'x-CSRFToken': csrfToken || '' }, body: JSON.stringify({ content_type: type, extension }) })
       if (res.status >= 500) throw new Error('Internal Server Error: Setting presigned URL.')
       if (!res.ok) {
         const errorData = await res.json()

@@ -19,7 +19,7 @@ const Journal : React.FC  =  () => {
     const [tillDate,setTillDate] = useState<Dayjs|null|string>(dayjs(new Date()).format('YYYY-MM-DD'))
     const fetchJournals = async () =>{
         try{
-        const res = await fetch(`${serverUrl}api/journal?${dateMode?`date=${dayjs(date).format('YYYY-MM-DD')}`:''}${rangeMode?(fromDate&&tillDate)?`start_date=${dayjs(fromDate).format('YYYY-MM-DD')}&end_date=${dayjs(tillDate).format('YYYY-MM-DD')}`:fromDate?`start_date=${dayjs(fromDate).format('YYYY-MM-DD')}`:tillDate?`end_date=${dayjs(tillDate).format('YYYY-MM-DD')}`:'':''}`,{
+        const res = await fetch(`${serverUrl}/api/journal?${dateMode?`date=${dayjs(date).format('YYYY-MM-DD')}`:''}${rangeMode?(fromDate&&tillDate)?`start_date=${dayjs(fromDate).format('YYYY-MM-DD')}&end_date=${dayjs(tillDate).format('YYYY-MM-DD')}`:fromDate?`start_date=${dayjs(fromDate).format('YYYY-MM-DD')}`:tillDate?`end_date=${dayjs(tillDate).format('YYYY-MM-DD')}`:'':''}`,{
             method:'GET',
             credentials:'include',
             headers:{

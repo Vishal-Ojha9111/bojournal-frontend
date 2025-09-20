@@ -16,7 +16,7 @@ const Login: React.FC = () => {
             toast.error('All fields are mandatory.')
             return
         }
-        const data = await fetch(`${serverUrl}api/auth/login`,{
+        const data = await fetch(`${serverUrl}/api/auth/login`,{
             method: 'POST',
             credentials: 'include',
             headers: {"Content-Type":"application/json", 'x-CSRFToken': csrfToken || ''},

@@ -15,7 +15,7 @@ const CreateHoliday : React.FC  =  () => {
         const handleCreateHoliday = async () =>{
                 try{
                         const formattedDate = dayjs(date).format('YYYY-MM-DD')
-                const res = await fetch(`${serverUrl}api/holiday/`,{
+                const res = await fetch(`${serverUrl}/api/holiday/`,{
                         method:'POST',
                         credentials: 'include',
                         headers:{

@@ -31,7 +31,7 @@ function App() {
 
   const authCheck = async () : Promise<void> => {
     try {
-      const res = await fetch(`${serverUrl}api/auth/authcheck`, {
+      const res = await fetch(`${serverUrl}/api/auth/authcheck`, {
         method: 'GET',
         credentials:'include'
       } )
@@ -39,6 +39,7 @@ function App() {
         throw new Error('Internal Server Error: Checking authentication.')
       }
       const data : AuthCheckResponse = await res.json()
+      console.log(data)
       if (!data.status) {
         setUser(null)
         localStorage.removeItem("boj-user")
@@ -62,7 +63,7 @@ function App() {
   }
 
   useEffect(() => {
-    if (!(location.pathname === '/login' || location.pathname === '/signup' || location.pathname === '/forgotpassword')) {
+    if (!(location.pathname === '/login' || location.pathname === '/signup' || location.pathname === '/forgotpassword' || location.pathname === '/')) {
       authCheck()
     }
   },[])
@@ -70,7 +71,7 @@ function App() {
   return (
     <Routes>
       <Route element={<Header/>}>
-        <Route path="/" element={user?<Navigate to={'/dashboard'}/>:<Home/>}/>
+        <Route path="/" element={<Home/>}/>
         <Route path="/dashboard" element={user?<Dashboard/>:<Navigate to={'/login'}/>}/>
         <Route path="/login" element={user?<Navigate to={'/'}/>:<Login/>}/>
         <Route path="/signup" element={user?<Navigate to={'/'}/>:<Signup/>}/>

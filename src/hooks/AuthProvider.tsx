@@ -12,7 +12,7 @@ const storedUser = localStorage.getItem('boj-user');
 const initialUser = storedUser ? JSON.parse(storedUser) : null;
 const [user, setUser] = useState<User | null>(initialUser);
 const [csrfToken, setCsrfToken] = useState<string | null>(null);
-
+console.log(Boolean(initialUser),user)
 const getCSRFToken = async () => {
   try {
     const res = await fetch(`${serverUrl}/api/auth/csrf`, { method: 'GET', credentials: 'include' });

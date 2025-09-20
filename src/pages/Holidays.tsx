@@ -12,7 +12,7 @@ const Holidays : React.FC  =  () => {
 
     const fetchHolidays = async () =>{
         try {
-            const res = await fetch(`${serverUrl}api/holiday/`,{
+            const res = await fetch(`${serverUrl}/api/holiday/`,{
                 method:'GET',
                 credentials:'include',
                 headers:{
@@ -42,7 +42,7 @@ const Holidays : React.FC  =  () => {
 
     const deleteHoliday = async (date:string) =>{
         try {
-            const res = await fetch(`${serverUrl}api/holiday/`,{
+            const res = await fetch(`${serverUrl}/api/holiday/`,{
                 method:"DELETE",
                 credentials:'include',
                 headers:{
