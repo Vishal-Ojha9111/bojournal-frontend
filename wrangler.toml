@@ -1,0 +1,4 @@
+name = "bojournal" # Name of your project
+compatibility_date = "2025-09-19" # Minimum compatibility date for Workers runtime
+[assets]
+build_output_dir = "./dist" # Directory where your React app builds to (e.g., 'dist', 'build')
