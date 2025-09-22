@@ -24,7 +24,7 @@ const Dashboard : React.FC = () => {
 
     const fetchBalances = async () => {
         try {
-            const date = new Date().toISOString().split('T')[0];
+            const date = new Date().toLocaleDateString('en-IN', { year: 'numeric', month: '2-digit', day: '2-digit' }).split('/').reverse().join('-'); // Get current date in YYYY-MM-DD format
             const res = await fetch(`${serverUrl}/api/journal?date=${date}`,{
                 method: 'GET',
                 credentials: 'include',
@@ -103,9 +103,9 @@ const Dashboard : React.FC = () => {
                 <div className="bg-white shadow sm:rounded-lg p-6">
                     <h3 className="font-semibold mb-3 md:text-lg">Credits</h3>
                     {balance && checkBalances(balance.credits) ? <div>
-                    {Object.entries(balance!.credits).map(([key, value]) => (
+                    {Object.entries(balance!.credits).map(([key, value], index) => (
                          value.length === 0 ? <></>:
-                         <div key={key} className="mb-2">
+                         <div key={index} className="mb-2">
                              <div className="text-sm font-medium text-gray-600">{key}</div>
                              <ul className="list-disc ml-5 mt-1 text-gray-700">
                                 {Array.isArray(value) ? value.map((val) => (
@@ -121,9 +121,9 @@ const Dashboard : React.FC = () => {
                  <div className="bg-white shadow sm:rounded-lg p-6">
                      <h3 className="font-semibold mb-3 md:text-lg">Debits</h3>
                      {balance && checkBalances(balance.debits) ? <div>
-                     {Object.entries(balance!.debits).map(([key, value]) => (
+                     {Object.entries(balance!.debits).map(([key, value], index) => (
                         Array.isArray(value) && value.length === 0 ? <></>:
-                         <div key={key} className="mb-2">
+                         <div key={index} className="mb-2">
                              <div className="text-sm font-medium text-gray-600">{key}</div>
                              <ul className="list-disc ml-5 mt-1 text-gray-700">
                                 {Array.isArray(value) ? value.map((val) => (

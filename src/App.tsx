@@ -39,7 +39,6 @@ function App() {
         throw new Error('Internal Server Error: Checking authentication.')
       }
       const data : AuthCheckResponse = await res.json()
-      console.log(data)
       if (!data.status) {
         setUser(null)
         localStorage.removeItem("boj-user")

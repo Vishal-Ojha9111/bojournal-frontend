@@ -59,7 +59,6 @@ const Signup : React.FC  =  () => {
             toast.success(data.message)
             return
         }
-        console.log(data)
         toast.error(data.message)
     }
 
@@ -86,8 +85,7 @@ const Signup : React.FC  =  () => {
             return
         }
     }catch (error: unknown){
-        const msg = error instanceof Error ? error.message : 'An unexpected error occurred'
-        toast.error(msg)
+        toast.error(error instanceof Error ? error.message : 'An unexpected error occurred')
     }
     }
 

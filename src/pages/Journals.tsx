@@ -51,7 +51,6 @@ const Journal : React.FC  =  () => {
             }
             fetchJournals();
         }else if(mode==='rangeMode'){
-          console.log(fromDate, tillDate)
             if(!fromDate&&!tillDate){
                 toast.error('Please select a date range');
                 return;

@@ -63,7 +63,6 @@ const Holidays : React.FC  =  () => {
             } else {
                 toast.error('An unexpected error occurred')
             }
-            console.log(error)
         }
     }
 

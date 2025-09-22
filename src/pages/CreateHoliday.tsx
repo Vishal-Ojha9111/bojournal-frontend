@@ -29,7 +29,6 @@ const CreateHoliday : React.FC  =  () => {
                         throw new Error(data.message)
                 }
                 toast.success(data.message)
-                console.log(data)
                 }catch(error: unknown) {
                         console.log((error as Error)?.message)
                         toast.error((error as Error)?.message)
