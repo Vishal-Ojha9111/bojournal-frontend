@@ -164,12 +164,12 @@ const Journal : React.FC  =  () => {
                         <td className="px-4 py-3 text-sm">{index+1}</td>
                         <td className="px-4 py-3 text-sm">{journal.date}</td>
                         <td className="px-4 py-3 text-sm">{journal.opening_balance}</td>
-                        {getTotals(journal.debits).map((totalAmount:number, idx:number) => (
+                        {getTotals(journal.credits).map((totalAmount:number, idx:number) => (
                           <td key={`d-${idx}`} className="px-4 py-3 text-sm">{totalAmount}</td>
                         ))}
                         <td className="px-4 py-3 text-sm">{journal.total_debits}</td>
                         <td className="px-4 py-3 text-sm">{journal.net_balance}</td>
-                        {getTotals(journal.credits).map((totalAmount:number, idx:number) => (
+                        {getTotals(journal.debits).map((totalAmount:number, idx:number) => (
                           <td key={`c-${idx}`} className="px-4 py-3 text-sm">{totalAmount}</td>
                         ))}
                         <td className="px-4 py-3 text-sm">{journal.total_credits}</td>

@@ -41,7 +41,7 @@ const CreateHoliday : React.FC  =  () => {
             <div className="space-y-4">
                 <div>
                     <label className="block text-lg font-medium text-black mb-1">Date</label>
-                    <DatePicker value={date ? dayjs(date) : dayjs(new Date())} onChange={(value: PickerValue) => setDate(value ? String((value as Dayjs).format('YYYY-MM-DD')) : '' )} />
+                    <DatePicker format="DD-MM-YYYY" value={date ? dayjs(date) : dayjs(new Date())} onChange={(value: PickerValue) => setDate(value ? String((value as Dayjs).format('YYYY-MM-DD')) : '' )} />
                 </div>
                 <div>
               <label htmlFor="holiday-reason" className="w-fit text-sm leading-6 font-medium text-black">
