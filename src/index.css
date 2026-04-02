@@ -1,3 +1,6 @@
+/* Import design system variables */
+@import './styles/vars.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

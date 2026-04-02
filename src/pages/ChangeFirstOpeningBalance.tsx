@@ -9,11 +9,11 @@ import serverUrl from '../var/serverUrl';
 
 const ChangeFirstOpeningBalance: React.FC = () => {
   const { user, setUser, csrfToken } = useAuth();
-  const [newOpeningBalance, setNewOpeningBalance] = React.useState<number>(user?.first_opening_balance || 0);
-  const [date, setDate] = React.useState<Dayjs|null|string>(user?.first_opening_balance_date||dayjs(new Date()).format('YYYY-MM-DD'));
+  const [newOpeningBalance, setNewOpeningBalance] = React.useState<number | null>(user?.first_opening_balance || null);
+  const [date, setDate] = React.useState<Dayjs | null | string>(user?.first_opening_balance_date || dayjs(new Date()).format('YYYY-MM-DD'));
 
   const handleSave = async () => {
-    if (newOpeningBalance == null ) {
+    if (newOpeningBalance == null || newOpeningBalance <= 0) {
       toast.error("Please enter a valid opening balance.");
       return;
     }
@@ -69,7 +69,7 @@ const ChangeFirstOpeningBalance: React.FC = () => {
       <div className="space-y-4">
         <div>
                             <label className="block text-lg font-medium text-gray-700 mb-1">Date</label>
-                            <DatePicker disabled={Boolean(user?.first_opening_balance_date)} value={user?.first_opening_balance_date ? dayjs(user.first_opening_balance_date) : dayjs(new Date())} onChange={(value: PickerValue) => setDate(value ? String((value as Dayjs).format('YYYY-MM-DD')) : '' )} />
+                            <DatePicker disabled={Boolean(user?.first_opening_balance_date)} value={user?.first_opening_balance_date ? dayjs(user.first_opening_balance_date) : date ? dayjs(date) : dayjs(new Date())} onChange={(value: PickerValue) => setDate(value ? String((value as Dayjs).format('YYYY-MM-DD')) : '' )} />
                         </div>
         <div>
               <label htmlFor="amount" className="w-fit text-sm/6 font-medium text-black">
@@ -82,7 +82,7 @@ const ChangeFirstOpeningBalance: React.FC = () => {
                     name="amount"
                     type="number"
                     placeholder="Amount"
-                    value={newOpeningBalance}
+                    value={newOpeningBalance != null && newOpeningBalance !== 0 ? newOpeningBalance : ''}
                     onChange={(e) => setNewOpeningBalance(Number(e.target.value))}
                     className="block min-w-0 grow bg-inherit rounded-full py-1.5 pr-3 pl-1 text-base text-black placeholder:text-gray-700 focus:outline-none sm:text-sm/6"
                   />            

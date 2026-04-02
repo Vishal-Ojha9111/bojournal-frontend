@@ -7,6 +7,7 @@ import Transaction from "../components/Transaction";
 import toast from "react-hot-toast";
 import { CheckIcon, ChevronDoubleUpIcon, ChevronUpDownIcon } from "@heroicons/react/16/solid";
 import type { PickerValue } from "@mui/x-date-pickers/internals";
+import type { Register_type } from "../types/client/User";
 import serverUrl from "../var/serverUrl";
 
 
@@ -35,7 +36,8 @@ const Transactions: React.FC = () => {
     const [fromDate, setFromDate] = useState<Dayjs | null | string>(null);
     const [toDate, setToDate] = useState<Dayjs | null | string>(null);
     const [transactionType, setTransactionType] = useState<string>("");
-    const [register, setRegister] = useState<string>("");
+    const [registers, setRegisters] = useState<Register_type[] | undefined>(undefined);
+    const [selectedRegister, setSelectedRegister] = useState<string>("");
     const [editingId, setEditingId] = useState<number | null>(null);
     const [editData, setEditData] = useState<TransactionType | null>(null);
     const [currentPage, setCurrentPage] = useState<number>(1);
@@ -99,7 +101,7 @@ const Transactions: React.FC = () => {
         if (fromDate) queryParams.append('date_gte', fromDate as string);
         if (toDate) queryParams.append('date_lte', toDate as string);
         if (transactionType) queryParams.append('transaction_type', transactionType);
-        if (register) queryParams.append('register', register);
+        if (selectedRegister) queryParams.append('register', selectedRegister);
         queryParams.append('page', page.toString());
 
         try {
@@ -183,6 +185,10 @@ const Transactions: React.FC = () => {
         setRotate(rotate + 180);
     }, [filtersOpen]);
 
+    useEffect(() => {
+      setRegisters(user?.register_types.filter((reg: Register_type) => transactionType == 'credit' ? reg.credit : transactionType == 'debit' ? reg.debit : false))
+    },[transactionType]);
+
     return (
         <div className="space-y-6">
             <div ref={containerRef} className="h-11 bg-gray-300 rounded-sm flex flex-col rounded-t-lg">
@@ -201,7 +207,7 @@ const Transactions: React.FC = () => {
                 <div className="flex justify-between items-center mb-2">
                 <h2 className="text-lg font-semibold mb-4">Filter Transactions</h2>
                 <div className="flex items-center gap-2">
-                  <button type="button" onClick={() => { setFromDate(null); setToDate(null); setTransactionType(''); setRegister(''); }} className="px-2 py-1 bg-red-500 text-white font-bold border rounded">Reset</button>
+                  <button type="button" onClick={() => { setFromDate(null); setToDate(null); setTransactionType(''); setSelectedRegister(''); }} className="px-2 py-1 bg-red-500 text-white font-bold border rounded">Reset</button>
                 </div>
                 </div>
                 
@@ -267,12 +273,12 @@ const Transactions: React.FC = () => {
                                   </Listbox>
                                   </div>
                     <div className="grid grid-rows-2 gap-0">
-          <Listbox value={register} onChange={(e) => setRegister( e )}>
+          <Listbox value={selectedRegister} onChange={(e) => setSelectedRegister( e )}>
             <Label className="block text-sm/6 font-medium w-fit text-black">Register</Label>
             <div className="relative -mt-1 max-w-80">
               <ListboxButton type='button' className="grid w-full cursor-default grid-cols-1 rounded-md bg-gray-200 py-1.5 pr-2 pl-3 text-left text-black ring-1 ring-white/10 ring-offset-0 focus-within:ring-2 focus-within:ring-indigo-500 focus-within:ring-offset-0 sm:text-sm sm:leading-6">
                 <span className="col-start-1 row-start-1 flex items-center gap-3 pr-6">
-                  <span className="block truncate text-black">{register?register:'Select register'}</span>
+                  <span className="block truncate text-black">{selectedRegister?selectedRegister:'Select register'}</span>
                 </span>
                 <ChevronUpDownIcon aria-hidden="true" className="col-start-1 row-start-1 h-5 w-5 self-center justify-self-end text-gray-400 sm:h-4 sm:w-4" />
               </ListboxButton>
@@ -296,23 +302,23 @@ const Transactions: React.FC = () => {
                     <div className="flex items-center">
                       <span className="ml-3 block truncate font-normal group-data-selected:font-semibold">All Register</span>
                     </div>
-                    {register === "All Register" &&
+                    {selectedRegister === "All Register" &&
                     <span className="absolute inset-y-0 right-0 flex items-center pr-4 text-indigo-400 group-not-data-selected:hidden group-data-focus:text-white">
                       <CheckIcon aria-hidden="true" className="h-5 w-5" />
                     </span>
                     }
                   </ListboxOption>
-                {user?.register_types.map((reg) => (
+                {registers?.map((reg) => (
                   <ListboxOption
-                    key={reg}
-                    value={reg}
+                    key={reg.name}
+                    value={reg.name}
                     className="group relative cursor-default py-2 pr-9 pl-3 text-white select-none data-focus:bg-indigo-500 data-focus:outline-hidden"
                   >
                     <div className="flex items-center">
-                      <span className="ml-3 block truncate font-normal group-data-selected:font-semibold">{reg}</span>
+                      <span className="ml-3 block truncate font-normal group-data-selected:font-semibold">{reg.name}</span>
                     </div>
                     {
-                      reg === register && 
+                      reg.name === selectedRegister && 
                     <span className="absolute inset-y-0 right-0 flex items-center pr-4 text-indigo-400 group-not-data-selected:hidden group-data-focus:text-white">
                       <CheckIcon aria-hidden="true" className="h-5 w-5" />
                     </span>

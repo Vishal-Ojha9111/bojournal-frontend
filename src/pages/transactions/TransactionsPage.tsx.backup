@@ -1,0 +1,523 @@
+// FILE: src/pages/transactions/TransactionsPage.tsx
+// PURPOSE: Main transactions list page with filters, sorting, and pagination
+// API: GET /transactions/
+
+import { useState } from 'react';
+import { useTransactions } from '../../features/transactions/hooks';
+import { useRegisters } from '../../features/registers/hooks';
+import { Button } from '../../components/ui/Button';
+import { Input } from '../../components/ui/Input';
+import { Select } from '../../components/ui/Select';
+import { Skeleton } from '../../components/ui/Skeleton';
+import { Card } from '../../components/ui/Card';
+import { TransactionDetailPopup } from '../../components/transactions/TransactionDetailPopup';
+import type { TransactionFilters, Transaction } from '../../features/transactions/schemas';
+import { formatCurrency } from '../../lib/currency';
+import { getRegisterNameById } from '../../lib/userStorage';
+import { Link, useSearchParams } from 'react-router-dom';
+
+/**
+ * TransactionsPage Component
+ * 
+ * Displays paginated list of transactions with filtering and sorting.
+ * 
+ * Structure:
+ * - Header with title and "Create" button
+ * - Collapsible filter form (collapses when results shown)
+ * - Sort/filter tags bar (shows active filters)
+ * - Transaction cards grid (responsive)
+ * - Pagination controls
+ * - Empty states
+ * 
+ * Features:
+ * - URL-based filter state (shareable links)
+ * - Collapsible filters (auto-collapse on results)
+ * - Responsive grid (1/2/3 columns)
+ * - Image preview
+ * - Click to view detail popup
+ * 
+ * Routes:
+ * - /app/transactions
+ * - /app/transactions?date=2024-01-15&type=debit
+ */
+export const TransactionsPage: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [showFilters, setShowFilters] = useState(!searchParams.toString());
+  const [selectedTransactionId, setSelectedTransactionId] = useState<number | null>(null);
+
+  // Parse filters from URL
+  const filters: TransactionFilters = {
+    date: searchParams.get('date') || undefined,
+    start_date: searchParams.get('start_date') || undefined,
+    end_date: searchParams.get('end_date') || undefined,
+    transaction_type: (searchParams.get('transaction_type') as 'debit' | 'credit') || undefined,
+    register: searchParams.get('register') ? Number(searchParams.get('register')) : undefined,
+  };
+
+  const page = Number(searchParams.get('page')) || 1;
+
+  // Fetch transactions (note: pagination is handled by the API via filters)
+  const { data, isLoading, isError } = useTransactions(filters);
+
+  // Fetch registers for dropdown and name display
+  const { data: registersData } = useRegisters();
+
+  // Helper to get register name
+  const getRegisterName = (registerId: number): string => {
+    // Try localStorage first (faster)
+    const storedName = getRegisterNameById(registerId);
+    if (storedName) return storedName;
+    
+    // Fallback to fetched registers data
+    const register = registersData?.results?.find(r => r.id === registerId);
+    return register?.name || `Register #${registerId}`;
+  };
+
+  // Form state for filter inputs
+  const [filterForm, setFilterForm] = useState<TransactionFilters>(filters);
+
+  const handleApplyFilters = () => {
+    const params = new URLSearchParams();
+    
+    if (filterForm.date) params.set('date', filterForm.date);
+    if (filterForm.start_date) params.set('start_date', filterForm.start_date);
+    if (filterForm.end_date) params.set('end_date', filterForm.end_date);
+    if (filterForm.transaction_type) params.set('transaction_type', filterForm.transaction_type);
+    if (filterForm.register) params.set('register', String(filterForm.register));
+    
+    params.set('page', '1'); // Reset to first page on filter change
+    setSearchParams(params);
+    setShowFilters(false); // Collapse filters after applying
+  };
+
+  const handleClearFilters = () => {
+    setFilterForm({});
+    setSearchParams({});
+    setShowFilters(true);
+  };
+
+  const hasActiveFilters = !!(
+    filters.date ||
+    filters.start_date ||
+    filters.end_date ||
+    filters.transaction_type ||
+    filters.register
+  );
+
+  const handlePageChange = (newPage: number) => {
+    const params = new URLSearchParams(searchParams);
+    params.set('page', String(newPage));
+    setSearchParams(params);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 py-6 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Transactions</h1>
+            <p className="text-gray-600 mt-1">Manage your debits and credits</p>
+          </div>
+          <Link to="/app/transactions/create">
+            <Button>
+              <svg
+                className="w-5 h-5 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+              Create Transaction
+            </Button>
+          </Link>
+        </div>
+
+        {/* Filter Section */}
+        <Card className="mb-6">
+          <div className="p-4">
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center justify-between w-full text-left"
+            >
+              <h2 className="text-lg font-semibold text-gray-900">Filters</h2>
+              <svg
+                className={`w-5 h-5 transition-transform ${showFilters ? 'rotate-180' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </button>
+
+            {showFilters && (
+              <div className="mt-4 space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {/* Single Date */}
+                  <div>
+                    <label className="block text-sm font-medium mb-1.5">Date</label>
+                    <Input
+                      type="date"
+                      value={filterForm.date || ''}
+                      onChange={(e) =>
+                        setFilterForm({ ...filterForm, date: e.target.value || undefined })
+                      }
+                    />
+                  </div>
+
+                  {/* Date Range */}
+                  <div>
+                    <label className="block text-sm font-medium mb-1.5">Start Date</label>
+                    <Input
+                      type="date"
+                      value={filterForm.start_date || ''}
+                      onChange={(e) =>
+                        setFilterForm({ ...filterForm, start_date: e.target.value || undefined })
+                      }
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-1.5">End Date</label>
+                    <Input
+                      type="date"
+                      value={filterForm.end_date || ''}
+                      onChange={(e) =>
+                        setFilterForm({ ...filterForm, end_date: e.target.value || undefined })
+                      }
+                    />
+                  </div>
+
+                  {/* Transaction Type */}
+                  <div>
+                    <label className="block text-sm font-medium mb-1.5">Type</label>
+                    <Select
+                      value={filterForm.transaction_type || ''}
+                      onChange={(e) =>
+                        setFilterForm({
+                          ...filterForm,
+                          transaction_type: (e.target.value as 'debit' | 'credit') || undefined,
+                        })
+                      }
+                      options={[
+                        { value: '', label: 'All' },
+                        { value: 'debit', label: 'Debit' },
+                        { value: 'credit', label: 'Credit' },
+                      ]}
+                    />
+                  </div>
+
+                  {/* Register */}
+                  <div>
+                    <label className="block text-sm font-medium mb-1.5">Register</label>
+                    <Input
+                      type="number"
+                      placeholder="Register ID"
+                      value={filterForm.register || ''}
+                      onChange={(e) =>
+                        setFilterForm({
+                          ...filterForm,
+                          register: e.target.value ? Number(e.target.value) : undefined,
+                        })
+                      }
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      TODO: Replace with Select fetching from /registers/
+                    </p>
+                  </div>
+                </div>
+
+                {/* Filter Actions */}
+                <div className="flex gap-3 pt-4 border-t">
+                  <Button onClick={handleApplyFilters} className="flex-1 sm:flex-none">
+                    Apply Filters
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    onClick={handleClearFilters}
+                    className="flex-1 sm:flex-none"
+                  >
+                    Clear All
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </Card>
+
+        {/* Active Filter Tags */}
+        {hasActiveFilters && !showFilters && (
+          <div className="mb-4 flex flex-wrap gap-2">
+            {filters.date && (
+              <span className="inline-flex items-center gap-1 px-3 py-1 bg-brand-100 text-brand-700 rounded-full text-sm">
+                Date: {filters.date}
+                <button
+                  onClick={() => {
+                    const params = new URLSearchParams(searchParams);
+                    params.delete('date');
+                    setSearchParams(params);
+                  }}
+                  className="hover:text-brand-900"
+                >
+                  ×
+                </button>
+              </span>
+            )}
+            {filters.start_date && (
+              <span className="inline-flex items-center gap-1 px-3 py-1 bg-brand-100 text-brand-700 rounded-full text-sm">
+                From: {filters.start_date}
+                <button
+                  onClick={() => {
+                    const params = new URLSearchParams(searchParams);
+                    params.delete('start_date');
+                    setSearchParams(params);
+                  }}
+                  className="hover:text-brand-900"
+                >
+                  ×
+                </button>
+              </span>
+            )}
+            {filters.end_date && (
+              <span className="inline-flex items-center gap-1 px-3 py-1 bg-brand-100 text-brand-700 rounded-full text-sm">
+                To: {filters.end_date}
+                <button
+                  onClick={() => {
+                    const params = new URLSearchParams(searchParams);
+                    params.delete('end_date');
+                    setSearchParams(params);
+                  }}
+                  className="hover:text-brand-900"
+                >
+                  ×
+                </button>
+              </span>
+            )}
+            {filters.transaction_type && (
+              <span className="inline-flex items-center gap-1 px-3 py-1 bg-brand-100 text-brand-700 rounded-full text-sm">
+                Type: {filters.transaction_type}
+                <button
+                  onClick={() => {
+                    const params = new URLSearchParams(searchParams);
+                    params.delete('transaction_type');
+                    setSearchParams(params);
+                  }}
+                  className="hover:text-brand-900"
+                >
+                  ×
+                </button>
+              </span>
+            )}
+            {filters.register && (
+              <span className="inline-flex items-center gap-1 px-3 py-1 bg-brand-100 text-brand-700 rounded-full text-sm">
+                Register: {filters.register}
+                <button
+                  onClick={() => {
+                    const params = new URLSearchParams(searchParams);
+                    params.delete('register');
+                    setSearchParams(params);
+                  }}
+                  className="hover:text-brand-900"
+                >
+                  ×
+                </button>
+              </span>
+            )}
+            <button
+              onClick={handleClearFilters}
+              className="text-sm text-gray-600 hover:text-gray-900 underline"
+            >
+              Clear all
+            </button>
+          </div>
+        )}
+
+        {/* Loading State */}
+        {isLoading && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[...Array(6)].map((_, i) => (
+              <Card key={i} className="p-4">
+                <Skeleton className="h-6 w-32 mb-2" />
+                <Skeleton className="h-4 w-full mb-2" />
+                <Skeleton className="h-4 w-24" />
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {/* Error State */}
+        {isError && (
+          <Card className="p-8 text-center">
+            <svg
+              className="w-12 h-12 text-red-500 mx-auto mb-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Failed to load transactions</h3>
+            <p className="text-gray-600 mb-4">There was an error fetching your transactions.</p>
+            <Button onClick={() => window.location.reload()}>Retry</Button>
+          </Card>
+        )}
+
+        {/* Transaction List */}
+        {!isLoading && !isError && data && (
+          <>
+            {data.results.length === 0 ? (
+              <Card className="p-8 text-center">
+                <svg
+                  className="w-16 h-16 text-gray-400 mx-auto mb-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  {hasActiveFilters ? 'No transactions found' : 'No transactions yet'}
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  {hasActiveFilters
+                    ? 'Try adjusting your filters to see more results.'
+                    : 'Get started by creating your first transaction.'}
+                </p>
+                {hasActiveFilters ? (
+                  <Button variant="secondary" onClick={handleClearFilters}>
+                    Clear Filters
+                  </Button>
+                ) : (
+                  <Link to="/app/transactions/create">
+                    <Button>Create Transaction</Button>
+                  </Link>
+                )}
+              </Card>
+            ) : (
+              <>
+                {/* Transaction Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                  {data.results.map((transaction: Transaction) => (
+                    <Card
+                      key={transaction.id}
+                      className="p-4 hover:shadow-lg transition-shadow cursor-pointer"
+                      onClick={() => setSelectedTransactionId(transaction.id)}
+                    >
+                      {/* Transaction Type Badge */}
+                      <div className="flex items-center justify-between mb-3">
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            transaction.transaction_type === 'debit'
+                              ? 'bg-red-100 text-red-700'
+                              : 'bg-green-100 text-green-700'
+                          }`}
+                        >
+                          {transaction.transaction_type.toUpperCase()}
+                        </span>
+                        {transaction.image_url && (
+                          <svg
+                            className="w-5 h-5 text-gray-400"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                            />
+                          </svg>
+                        )}
+                      </div>
+
+                      {/* Amount */}
+                      <div className="mb-2">
+                        <div className="text-2xl font-bold text-gray-900">
+                          {formatCurrency(transaction.amount)}
+                        </div>
+                      </div>
+
+                      {/* Date */}
+                      <div className="text-sm text-gray-600 mb-2">{transaction.date}</div>
+
+                      {/* Description */}
+                      {transaction.description && (
+                        <p className="text-sm text-gray-700 line-clamp-2 mb-2">
+                          {transaction.description}
+                        </p>
+                      )}
+
+                      {/* Register Name */}
+                      <div className="text-xs text-gray-500">
+                        Register: {getRegisterName(transaction.register)}
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+
+                {/* Pagination */}
+                {data.count > 10 && (
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm text-gray-600">
+                      Showing {(page - 1) * 10 + 1} to {Math.min(page * 10, data.count)} of{' '}
+                      {data.count} transactions
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="secondary"
+                        onClick={() => handlePageChange(page - 1)}
+                        disabled={!data.previous}
+                      >
+                        Previous
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        onClick={() => handlePageChange(page + 1)}
+                        disabled={!data.next}
+                      >
+                        Next
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* Transaction Detail Popup */}
+      {selectedTransactionId && (
+        <TransactionDetailPopup
+          transactionId={selectedTransactionId}
+          isOpen={!!selectedTransactionId}
+          onClose={() => setSelectedTransactionId(null)}
+        />
+      )}
+    </div>
+  );
+};

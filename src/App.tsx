@@ -1,91 +1,101 @@
-import { Route, Routes, Navigate, useNavigate, useLocation } from "react-router-dom"
-import toast from "react-hot-toast"
-import { useEffect } from "react"
+// FILE: src/App.tsx
+// PURPOSE: Main application component with routing and providers
+// API: N/A (routing and providers)
 
-import { useAuth } from "./context/AuthContext"
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from './lib/queries';
 
-import type { AuthCheckResponse } from "./types/apis/Auth"
+// Layouts
+import DashboardLayout from './layouts/DashboardLayout';
+import ProtectedRoute from './components/ProtectedRoute';
 
-import Signup from "./pages/Signup"
-import Login from "./pages/Login"
-import Dashboard from "./pages/Dashboard"
-import Home from "./pages/Home"
-import UserPage from './pages/UserPage'
-import Transactions from "./pages/Transactions"
-import CreateTransaction from "./pages/CreateTransaction"
-import Journal from "./pages/Journals"
-import CreateHoliday from "./pages/CreateHoliday"
-import Holidays from "./pages/Holidays"
-import ChangePassword from "./pages/ChangePassword"
-import ChangeFirstOpeningBalance from "./pages/ChangeFirstOpeningBalance"
-import Header from "./components/Header"
-import serverUrl from "./var/serverUrl"
+// Public Pages
+import HomePage from './pages/HomePage';
+import SignupPage from './pages/auth/SignupPage';
+import LoginPage from './pages/auth/LoginPage';
+import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 
-import type { User } from "./types/client/User"
+// Dashboard Pages
+import DashboardPage from './pages/dashboard/DashboardPage';
+
+// Transaction Pages
+import { TransactionsPage } from './pages/transactions/TransactionsPage';
+import { CreateTransactionPage } from './pages/transactions/CreateTransactionPage';
+
+// Register Pages
+import { RegistersPage } from './pages/registers/RegistersPage';
+
+// Journal Pages
+import { JournalPage } from './pages/journal/JournalPage';
+
+// Holidays Pages
+import { HolidaysPage } from './pages/holidays/HolidaysPage';
+
+// Profile Pages
+import ProfilePage from './pages/profile/ProfilePage';
+
+// Subscription Pages
+import SubscriptionPage from './pages/subscription/SubscriptionPage';
+
+// Import styles
+import './index.css';
+import './styles/vars.css';
+import PlansPage from './pages/plans/PlansPage';
+import PaymentPage from './pages/payment/Payment';
 
 function App() {
- 
-  const {user, setUser} = useAuth()
-  const navigate = useNavigate()
-  const location = useLocation()
-
-  const authCheck = async () : Promise<void> => {
-    try {
-      const res = await fetch(`${serverUrl}/api/auth/authcheck`, {
-        method: 'GET',
-        credentials:'include'
-      } )
-      if(res.status>=500){
-        throw new Error('Internal Server Error: Checking authentication.')
-      }
-      const data : AuthCheckResponse = await res.json()
-      if (!data.status) {
-        setUser(null)
-        localStorage.removeItem("boj-user")
-        throw new Error(data.message)
-      }
-      const storedUser = localStorage.getItem('boj-user')
-      const localUser: User = storedUser ? JSON.parse(storedUser) : null
-      if(localUser!=data.user){
-        localStorage.setItem('boj-user', JSON.stringify(data.user))
-      }
-      setUser(data.user)
-    } catch (error:unknown) {
-      if (error instanceof Error) {
-    toast.error(error.message);
-    navigate('/login')
-  } else {
-    toast.error("An unexpected error occurred");
-    navigate('/login')
-  }
-    }
-  }
-
-  useEffect(() => {
-    if (!(location.pathname === '/login' || location.pathname === '/signup' || location.pathname === '/forgotpassword' || location.pathname === '/')) {
-      authCheck()
-    }
-  },[])
-
   return (
-    <Routes>
-      <Route element={<Header/>}>
-        <Route path="/" element={<Home/>}/>
-        <Route path="/dashboard" element={user?<Dashboard/>:<Navigate to={'/login'}/>}/>
-        <Route path="/login" element={user?<Navigate to={'/'}/>:<Login/>}/>
-        <Route path="/signup" element={user?<Navigate to={'/'}/>:<Signup/>}/>
-        <Route path="/user" element={user?<UserPage/>:<Navigate to={'/login'}/>}/>
-        <Route path="/transactions" element={user?<Transactions/>:<Navigate to={'/login'}/>}/>
-        <Route path="/createtransaction" element={user?<CreateTransaction/>:<Navigate to={'/login'}/>}/>
-        <Route path="/journal" element={user?<Journal/>:<Navigate to={'/login'}/>}/>
-        <Route path="/holidays" element={user?<Holidays/>:<Navigate to={'/login'}/>}/>
-        <Route path="/createholiday" element={user?<CreateHoliday/>:<Navigate to={'/login'}/>}/>
-        <Route path="/forgotpassword" element={user?<Navigate to={'/'}/>:<ChangePassword/>}/>
-        <Route path="/changepassword" element={user?<ChangePassword/>:<Navigate to={'/login'}/>}/>
-        <Route path="/changefirstopeningbalance" element={user?<ChangeFirstOpeningBalance/>:<Navigate to={'/login'}/>}/>
-      </Route>
-    </Routes>
-  )
+    <QueryClientProvider client={queryClient}>
+      <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<HomePage />} />
+          <Route path="/auth/signup" element={<SignupPage />} />
+          <Route path="/auth/signup/:referral_code" element={<SignupPage />} />
+          <Route path="/auth/login" element={<LoginPage />} />
+          <Route path="/auth/reset" element={<ResetPasswordPage />} />
+          <Route path="/plans" element={<PlansPage />} />
+
+          {/* Protected Routes */}
+          <Route
+            path="/app"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<Navigate to="/app/dashboard" replace />} />
+            <Route path="dashboard" element={<DashboardPage />} />
+            
+            {/* Transaction Routes */}
+            <Route path="transactions" element={<TransactionsPage />} />
+            <Route path="transactions/create" element={<CreateTransactionPage />} />
+            
+            {/* Register Routes */}
+            <Route path="registers" element={<RegistersPage />} />
+            
+            {/* Journal Routes */}
+            <Route path="journal" element={<JournalPage />} />
+            
+            {/* Holidays Routes */}
+            <Route path="holidays" element={<HolidaysPage />} />
+            
+            {/* Profile Routes */}
+            <Route path="profile" element={<ProfilePage />} />
+            
+            {/* Subscription Routes */}
+            <Route path="subscription" element={<SubscriptionPage />} />
+
+            {/* Payment Routes */}
+            <Route path="payment" element={<PaymentPage />} />
+          </Route>
+
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+    </QueryClientProvider>
+  );
 }
 
-export default App
+export default App;
